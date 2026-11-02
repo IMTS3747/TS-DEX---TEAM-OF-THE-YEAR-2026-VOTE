@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 // CONFIGURATION
 const CLIENT_ID = '1566859679441752184';
 const CLIENT_SECRET = 'c7UlC3fZcG3C1Z0lZcpaoFySe934CzH8';
-const REDIRECT_URI = 'http://localhost:3000/api/auth/callback';
+const REDIRECT_URI = 'https://ts-dex-team-of-the-year-2027-vote.onrender.com//api/auth/callback';
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1566859350381953099/hzapHaaXFpXqYaAuHSqjieC1KLOmjHr3qgg3nb3jUVk5FbK6F4iP-DMwp0IFTerMKQdY';
 
 app.use(express.json());
