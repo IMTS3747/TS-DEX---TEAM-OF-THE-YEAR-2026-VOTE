@@ -1,0 +1,864 @@
+:root {
+    --panel-bg: rgba(9, 18, 35, 0.92);
+    --accent-gold: #f5c518;
+    --accent-gold-glow: rgba(245, 197, 24, 0.4);
+    --accent-blue: #00d2ff;
+    --accent-blue-glow: rgba(0, 210, 255, 0.25);
+    --text-bright: #ffffff;
+    --text-sub: #94a3b8;
+    --invalid-red: #ff4757;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    user-select: none;
+}
+
+body {
+    background:
+        radial-gradient(circle at 50% 10%, rgba(245, 197, 24, 0.25) 0%, rgba(0, 210, 255, 0.1) 40%, transparent 70%),
+        url('assets/web/background.png') center/cover no-repeat fixed #050b18;
+    color: var(--text-bright);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* MANDATORY LOGIN GATE */
+.login-gate-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 11, 24, 0.95);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.login-gate-box {
+    background: var(--panel-bg);
+    border: 2px solid var(--accent-gold);
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 50px var(--accent-gold-glow);
+}
+
+.login-gate-box h1 {
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--accent-gold);
+    margin-bottom: 12px;
+}
+
+.login-gate-box p {
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.btn-discord-large {
+    background: #5865F2;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+    transition: all 0.2s;
+}
+
+.btn-discord-large:hover {
+    background: #4752C4;
+    transform: translateY(-2px);
+}
+
+/* HEADER & PROFILE DROPDOWN */
+.main-header {
+    position: relative;
+    background: linear-gradient(180deg, rgba(16, 29, 56, 0.95) 0%, rgba(5, 11, 24, 0.95) 100%);
+    padding: 16px;
+    text-align: center;
+    border-bottom: 2px solid var(--accent-gold);
+    box-shadow: 0 4px 30px var(--accent-gold-glow);
+}
+
+.main-header h1 {
+    font-size: 2rem;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, #ffffff 0%, var(--accent-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+}
+
+.main-header p {
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+.auth-bar {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+}
+
+.profile-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-avatar-btn {
+    background: transparent;
+    border: 2px solid var(--accent-gold);
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    box-shadow: 0 0 10px var(--accent-gold-glow);
+    transition: transform 0.2s;
+}
+
+.profile-avatar-btn:hover {
+    transform: scale(1.05);
+}
+
+.profile-avatar-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 50px;
+    background: var(--panel-bg);
+    border: 1px solid rgba(245, 197, 24, 0.3);
+    border-radius: 10px;
+    width: 180px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+    z-index: 50;
+    overflow: hidden;
+    text-align: left;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-header {
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-item {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.82srem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: rgba(245, 197, 24, 0.15);
+    color: var(--accent-gold);
+}
+
+.dropdown-item.logout {
+    color: var(--invalid-red);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dropdown-item.logout:hover {
+    background: rgba(255, 71, 87, 0.15);
+}
+
+/* APP LAYOUT */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 15px 25px 35px;
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
+    gap: 20px;
+}
+
+/* PITCH SECTION */
+.pitch-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.pitch-frame {
+    width: 100%;
+    max-width: 780px;
+    height: 500px;
+    border: 2px solid var(--accent-gold);
+    border-radius: 16px;
+    padding: 8px;
+    background: rgba(10, 20, 40, 0.85);
+    box-shadow: 0 0 40px var(--accent-gold-glow), inset 0 0 20px rgba(0, 210, 255, 0.15);
+}
+
+.pitch {
+    width: 100%;
+    height: 100%;
+    background: url('assets/web/pitch-bg.png') center/cover no-repeat #0a1c12;
+    border-radius: 10px;
+    position: relative;
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+    overflow: hidden;
+}
+
+.pitch-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 11, 24, 0.35);
+    pointer-events: none;
+}
+
+.pitch-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 2;
+    padding: 0 15px;
+}
+
+/* PITCH SLOTS */
+.slot {
+    width: 85px;
+    height: 110px;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 11, 24, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.slot:hover {
+    border-color: var(--accent-blue);
+    background: rgba(0, 210, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.slot.drag-hover {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 15px var(--accent-gold);
+    background: rgba(245, 197, 24, 0.2);
+}
+
+.slot.drag-invalid {
+    border-color: var(--invalid-red) !important;
+    box-shadow: 0 0 15px var(--invalid-red) !important;
+    background: rgba(255, 71, 87, 0.25) !important;
+}
+
+.slot-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text-sub);
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+
+.pitch-card {
+    width: 100%;
+    height: 100%;
+    background: url('assets/web/TOTY CARD - PORTAIT.png') center/cover no-repeat;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 6px 4px;
+    position: relative;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.render-fallback {
+    position: absolute;
+    top: 25px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.3);
+    z-index: 1;
+}
+
+.card-text-content {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 4px;
+    padding: 0 2px;
+}
+
+.pitch-card .player-name {
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px #000;
+    text-align: center;
+    line-height: 1.1;
+    max-width: 95%;
+
+    /* Allows long names to wrap into 2 lines cleanly without ellipsis (...) */
+    white-space: normal;
+    overflow: visible;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.pitch-card .player-pos {
+    font-size: 0.48rem;
+    font-weight: 700;
+    color: var(--accent-gold);
+    margin-top: 1px;
+}
+
+/* PITCH WATERMARK LOGO (BOTTOM RIGHT BESIDE GK / UNDER RB) */
+.pitch-watermark {
+    position: absolute;
+    right: 15px;
+    bottom: 12px;
+    width: 130px;
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 10;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8));
+}
+
+.captain-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #f5c518 0%, #d4ac0d 100%);
+    color: #000;
+    font-weight: 900;
+    font-size: 0.65rem;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    border: 1.5px solid #fff;
+    z-index: 10;
+}
+
+/* LANDSCAPE NOMINEE CARD ASSET (SMALL CARD, MASSIVE RENDER) */
+.nominee-card {
+    height: 70px;
+    /* Keeps your card small and compact as desired */
+    background: url('assets/web/TOTY CARD - LANDSCAPE.png') center/cover no-repeat;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: grab;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: visible;
+    /* Allows the oversized render to scale large and pop out */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nominee-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-gold);
+    box-shadow: 0 4px 15px var(--accent-gold-glow);
+    z-index: 10;
+    /* Brings hovered card forward so the large render floats nicely */
+}
+
+.nominee-card.selected {
+    opacity: 0.3;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+.nominee-info {
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    max-width: 55%;
+}
+
+.nominee-info .name {
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: #fff;
+    text-shadow: 0 2px 4px #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nominee-info .pos-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--accent-gold);
+    letter-spacing: 1px;
+}
+
+.nominee-render {
+    width: 70px !important;
+    height: 70px !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain;
+    position: absolute;
+    right: 4px;
+    bottom: 0px;
+    z-index: 5;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.8));
+}
+
+/* CONTROL BUTTONS */
+.action-bar {
+    margin-top: 12px;
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    padding: 10px 26px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #f5c518 0%, #e67e22 100%);
+    color: #000;
+    box-shadow: 0 4px 15px var(--accent-gold-glow);
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 197, 24, 0.5);
+}
+
+.btn-reset {
+    background: #1e293b;
+    color: var(--text-sub);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-reset:hover {
+    background: #334155;
+    color: #fff;
+}
+
+/* HORIZONTAL 2-LEVEL NOMINEES SECTION */
+.nominees-section {
+    background: var(--panel-bg);
+    border: 1px solid rgba(245, 197, 24, 0.3);
+    border-radius: 14px;
+    padding: 15px 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7), inset 0 0 15px rgba(245, 197, 24, 0.05);
+}
+
+.nominees-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.nominees-header h3 {
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--accent-gold);
+}
+
+.drawer-tabs {
+    display: flex;
+    gap: 6px;
+}
+
+.tab {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-sub);
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    border-color: var(--accent-blue);
+    color: #fff;
+}
+
+.tab.active {
+    color: #000;
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 10px var(--accent-gold-glow);
+}
+
+/* 2-LEVEL GRID CONTAINER (HORIZONTAL SCROLL) */
+.nominees-container {
+    display: grid;
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: 240px;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-behavior: smooth;
+}
+
+.nominees-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.nominees-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+}
+
+.nominees-container::-webkit-scrollbar-thumb {
+    background: var(--accent-gold);
+    border-radius: 4px;
+}
+
+.nominee-info {
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+}
+
+.nominee-info .name {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: #fff;
+    text-shadow: 0 2px 4px #000;
+}
+
+.nominee-info .pos-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--accent-gold);
+    letter-spacing: 1px;
+}
+
+.nominee-render {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    z-index: 2;
+}
+
+/* VOTING CRITERIA SECTION */
+.criteria-section {
+    background: var(--panel-bg);
+    border: 1px solid rgba(0, 210, 255, 0.25);
+    border-radius: 14px;
+    padding: 20px 25px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+}
+
+.criteria-section h3 {
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--accent-gold);
+    margin-bottom: 6px;
+}
+
+.criteria-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-sub);
+    margin-bottom: 14px;
+}
+
+.criteria-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.criteria-list li {
+    font-size: 0.88rem;
+    color: #e2e8f0;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-gold);
+}
+
+.criteria-list li span {
+    font-weight: 800;
+    color: var(--accent-gold);
+    margin-right: 6px;
+}
+
+/* MODAL */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 11, 24, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background: var(--panel-bg);
+    border: 2px solid var(--accent-gold);
+    border-radius: 14px;
+    padding: 28px;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 40px var(--accent-gold-glow);
+}
+
+.modal-content h2 {
+    color: var(--accent-gold);
+    letter-spacing: 2px;
+}
+
+.summary-list {
+    text-align: left;
+    margin: 18px 0;
+    max-height: 240px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.summary-item {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.btn-submit.disabled {
+    background: #1e293b !important;
+    color: var(--text-sub) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+    box-shadow: none !important;
+}
+
+.btn-submit.active-pulse {
+    background: linear-gradient(135deg, #f5c518 0%, #e67e22 100%);
+    color: #000;
+    animation: btnPulse 1.5s infinite;
+}
+
+.btn-submit.selecting {
+    background: var(--accent-blue) !important;
+    color: #000 !important;
+    box-shadow: 0 0 20px var(--accent-blue-glow) !important;
+}
+
+@keyframes btnPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px var(--accent-gold-glow);
+    }
+
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 25px var(--accent-gold);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px var(--accent-gold-glow);
+    }
+}
+
+/* PITCH CARD PULSE DURING CAPTAIN SELECTION MODE */
+.pitch-card.captain-select-pulse {
+    border: 2px solid var(--accent-gold);
+    box-shadow: 0 0 15px var(--accent-gold);
+    cursor: pointer;
+}
+
+/* EA-STYLE VISUAL MODAL ENHANCEMENTS */
+.modal-content.large-modal {
+    max-width: 680px;
+    width: 92%;
+    padding: 24px;
+}
+
+.image-preview-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 280px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(245, 197, 24, 0.3);
+    border-radius: 12px;
+    margin: 18px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+}
+
+.loading-spinner {
+    color: var(--accent-gold);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.toty-preview-img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-download {
+    background: linear-gradient(135deg, #00d2ff 0%, #0072ff 100%);
+    color: #fff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px var(--accent-blue-glow);
+    transition: all 0.2s;
+}
+
+.btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
+}
+
+.render-container {
+    position: absolute;
+    inset: 0;
+    /* Covers the entire card layout from top to bottom */
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.render-container .render-img,
+.render-img {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95px;
+    height: 95px;
+    object-fit: contain;
+    pointer-events: none;
+
+    /* Smooth full-image vertical alpha fade into the card background */
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0.75) 75%, rgba(0, 0, 0, 0) 95%);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0.75) 75%, rgba(0, 0, 0, 0) 95%);
+}
+
+.export-frame-hidden {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 780px;
+    height: 500px;
+}
+
+.export-pitch {
+    width: 100%;
+    height: 100%;
+    background: url('assets/web/pitch-bg.png') center/cover no-repeat #0a1c12;
+    border-radius: 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 15px;
+    border: 2px solid var(--accent-gold);
+}
+
+.export-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 2;
+}

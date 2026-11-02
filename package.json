@@ -1,0 +1,17 @@
+{
+    "name": "toty-voting-site",
+    "version": "1.0.0",
+    "description": "TS DEX TOTY Voting Site",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "axios": "^1.7.0",
+        "express": "^4.19.0",
+        "express-session": "^1.18.0"
+    }
+}

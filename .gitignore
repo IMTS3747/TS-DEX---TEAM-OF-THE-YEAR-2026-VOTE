@@ -1,0 +1,13 @@
+# Node dependencies
+node_modules/
+npm-debug.log
+
+# Database files (keeps local test votes private)
+votes.json
+
+# Environment / Secret files
+.env
+
+# OS / System files
+.DS_Store
+Thumbs.db

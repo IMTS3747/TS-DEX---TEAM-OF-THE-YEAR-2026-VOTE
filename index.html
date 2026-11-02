@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TS DEX — Team of the Year Vote</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+    <!-- MANDATORY LOGIN GATE OVERLAY -->
+    <div class="login-gate-overlay" id="loginGate">
+        <div class="login-gate-box">
+            <h1>TS DEX TOTY 2026</h1>
+            <p>You must connect your Discord account to access the voting arena and cast your ballot.</p>
+            <button class="btn btn-discord-large" onclick="loginWithDiscord()">
+                <svg width="22" height="18" viewBox="0 0 127.14 96.36" fill="currentColor">
+                    <path
+                        d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a74.57,74.57,0,0,0,64.3,0c.87.69,1.76,1.37,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-18.93-72.13ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.87,53,48.8,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.1,53,91.06,65.69,84.69,65.69Z" />
+                </svg>
+                Login with Discord
+            </button>
+        </div>
+    </div>
+
+    <header class="main-header">
+        <div class="logo-area">
+            <h1>TS DEX TOTY 2026</h1>
+            <p>Cast your vote for the ultimate Team of the Year XI</p>
+        </div>
+
+        <!-- USER PROFILE / DROPDOWN BAR -->
+        <div class="auth-bar" id="authBar"></div>
+    </header>
+
+    <main class="app-container" id="appContainer">
+
+        <!-- PITCH DISPLAY -->
+        <section class="pitch-section">
+            <div class="pitch-frame" id="pitchFrame">
+                <div class="pitch" id="pitch">
+                    <div class="pitch-overlay"></div>
+
+                    <!-- Attackers (3) -->
+                    <div class="pitch-row row-att">
+                        <div class="slot" data-pos="ATT" data-slot="LW"><span class="slot-label">LW</span></div>
+                        <div class="slot" data-pos="ATT" data-slot="ST"><span class="slot-label">ST</span></div>
+                        <div class="slot" data-pos="ATT" data-slot="RW"><span class="slot-label">RW</span></div>
+                    </div>
+
+                    <!-- Midfielders (3) -->
+                    <div class="pitch-row row-mid">
+                        <div class="slot" data-pos="MID" data-slot="LCM"><span class="slot-label">CM</span></div>
+                        <div class="slot" data-pos="MID" data-slot="CM/CDM/CAM"><span
+                                class="slot-label">CM/CDM/CAM</span></div>
+                        <div class="slot" data-pos="MID" data-slot="RCM"><span class="slot-label">CM</span></div>
+                    </div>
+
+                    <!-- Defenders (4) -->
+                    <div class="pitch-row row-def">
+                        <div class="slot" data-pos="DEF" data-slot="LB"><span class="slot-label">LB</span></div>
+                        <div class="slot" data-pos="DEF" data-slot="LCB"><span class="slot-label">CB</span></div>
+                        <div class="slot" data-pos="DEF" data-slot="RCB"><span class="slot-label">CB</span></div>
+                        <div class="slot" data-pos="DEF" data-slot="RB"><span class="slot-label">RB</span></div>
+                    </div>
+
+                    <!-- Goalkeeper (1) -->
+                    <div class="pitch-row row-gk">
+                        <div class="slot" data-pos="GK" data-slot="GK"><span class="slot-label">GK</span></div>
+                    </div>
+
+                    <!-- WATERMARK LOGO -->
+                    <img src="assets/web/toty - TS Dex logo.png" class="pitch-watermark" alt="TS DEX Watermark" />
+
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn btn-reset" onclick="resetSquad()">Reset XI</button>
+                <button class="btn btn-submit" id="submitBtn" onclick="handleActionButtonClick()">Submit Ballot</button>
+            </div>
+
+            <div id="downloadExportFrame" class="export-frame-hidden">
+                <div class="export-pitch" id="exportPitch">
+                    <div class="pitch-overlay"></div>
+                    <div class="export-row" id="expRowAtt"></div>
+                    <div class="export-row" id="expRowMid"></div>
+                    <div class="export-row" id="expRowDef"></div>
+                    <div class="export-row" id="expRowGk"></div>
+                    <img src="assets/web/toty - TS Dex logo.png" class="pitch-watermark" alt="TS DEX Watermark" />
+                </div>
+            </div>
+        </section>
+
+        <!-- HORIZONTAL 2-LEVEL NOMINEE TRAY -->
+        <section class="nominees-section">
+            <div class="nominees-header">
+                <h3>NOMINEES DECK</h3>
+                <nav class="drawer-tabs">
+                    <button class="tab active" data-pos="ATT" onclick="filterNominees('ATT', event)">ATT</button>
+                    <button class="tab" data-pos="MID" onclick="filterNominees('MID', event)">MID</button>
+                    <button class="tab" data-pos="DEF" onclick="filterNominees('DEF', event)">DEF</button>
+                    <button class="tab" data-pos="GK" onclick="filterNominees('GK', event)">GK</button>
+                </nav>
+            </div>
+
+            <div class="nominees-container" id="nomineesList"></div>
+        </section>
+
+        <!-- VOTING CRITERIA SECTION -->
+        <section class="criteria-section">
+            <h3>VOTING CRITERIA</h3>
+            <p class="criteria-subtitle">Please base your TOTY selections on the following criteria (ordered by
+                priority):</p>
+            <ol class="criteria-list">
+                <li><span>1. Individual Performance</span> — Personal statistics, consistency, and match impact.</li>
+                <li><span>2. Team Success</span> — Trophies won, deep tournament runs, and team achievements.</li>
+                <li><span>3. Fair Play</span> — Sportsmanship, discipline, and professional conduct on the pitch.</li>
+                <li><span>4. Reputation</span> — Established legacy, caliber, and status in world football.</li>
+                <li><span>5. Hype</span> — Fan excitement, iconic moments, and media buzz.</li>
+            </ol>
+        </section>
+
+    </main>
+
+    <!-- EA-STYLE VISUAL SUBMISSION MODAL -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content large-modal">
+            <h2 id="modalTitle">VOTE REGISTERED</h2>
+            <p id="modalDesc">Your official TS DEX TOTY XI selection has been saved and posted to Discord!</p>
+
+            <!-- IMAGE PREVIEW CONTAINER -->
+            <div class="image-preview-wrapper" id="imagePreviewWrapper">
+                <div class="loading-spinner" id="modalSpinner">Generating your TOTY Card graphic...</div>
+                <img id="totyCanvasImage" class="toty-preview-img" alt="TS DEX TOTY XI" />
+            </div>
+
+            <div class="modal-actions">
+                <a id="downloadBtn" class="btn btn-download" download="TS_DEX_TOTY_2026_XI.png">
+                    📥 Download XI Graphic
+                </a>
+                <button class="btn btn-reset" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HTML2CANVAS LIBRARY FOR SCREENSHOT GENERATION -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
