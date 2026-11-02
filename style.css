@@ -862,3 +862,46 @@ body {
     align-items: center;
     z-index: 2;
 }
+
+@media screen and (max-width: 850px) {
+    .app-container {
+        padding: 10px 10px 25px;
+        gap: 12px;
+    }
+
+    .main-header h1 {
+        font-size: 1.4rem;
+        letter-spacing: 1px;
+    }
+
+    .pitch-frame {
+        max-width: 100%;
+        height: 420px;
+        padding: 4px;
+    }
+
+    .slot {
+        width: 65px;
+        height: 90px;
+    }
+
+    .render-container .render-img,
+    .render-img {
+        width: 75px;
+        height: 75px;
+    }
+
+    .pitch-card .player-name {
+        font-size: 0.45rem;
+    }
+
+    .pitch-card .player-pos {
+        font-size: 0.4rem;
+    }
+
+    .pitch-watermark {
+        width: 90px;
+        right: 8px;
+        bottom: 8px;
+    }
+}
