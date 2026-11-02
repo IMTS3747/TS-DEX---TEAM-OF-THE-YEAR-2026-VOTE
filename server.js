@@ -16,7 +16,7 @@ const WEBHOOK_URL = 'https://discord.com/api/webhooks/1566859350381953099/hzapHa
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 app.use(session({
-    secret: 'ts_dex_toty_secret_key_2026',
+    secret: 'ts_dex_toty_secret_key_2027',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 Days
@@ -169,7 +169,7 @@ app.post('/api/vote', async (req, res) => {
                     { name: "📋 Submitted XI", value: squadText || "No data" },
                     { name: "📊 Live Nominee Standings", value: sortedLeaderboard || "No votes yet" }
                 ],
-                footer: { text: "TS DEX TOTY 2026 Voting System" },
+                footer: { text: "TS DEX TOTY 2027 Voting System" },
                 timestamp: new Date().toISOString()
             }]
         };
