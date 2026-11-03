@@ -29,13 +29,14 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('Successfully connected to MongoDB Atlas!'))
     .catch(err => console.error('MongoDB Atlas connection error:', err));
 
-// Mongoose Schema & Model for Votes
+// Mongoose Schema & Model for Votes (Fully backward-compatible with existing records)
 const voteSchema = new mongoose.Schema({
     userId: { type: String, required: true, unique: true },
     username: { type: String, required: true },
     squad: { type: Object, required: true },
     captainId: { type: Number, required: true },
-    timestamp: { type: String, default: () => new Date().toISOString() }
+    timestamp: { type: String, default: () => new Date().toISOString() },
+    updatedAt: { type: String }
 });
 
 const VoteRecord = mongoose.model('VoteRecord', voteSchema);
@@ -52,10 +53,10 @@ async function readData() {
                 username: record.username,
                 squad: record.squad,
                 captainId: record.captainId,
-                timestamp: record.timestamp
+                timestamp: record.timestamp,
+                updatedAt: record.updatedAt
             };
 
-            // Calculate total counts for each player dynamically
             if (record.squad) {
                 for (let slot in record.squad) {
                     const pName = record.squad[slot].name;
@@ -149,17 +150,15 @@ app.post('/api/vote', async (req, res) => {
     const { squad, captainId } = req.body;
 
     try {
-        // Prevent duplicate votes via database check
         const existingVote = await VoteRecord.findOne({ userId });
         if (existingVote) {
-            return res.status(400).json({ error: 'You have already voted! Each Discord account can only vote once.' });
+            return res.status(400).json({ error: 'You have already voted! Use the Edit feature to update your ballot.' });
         }
 
         if (!squad || Object.keys(squad).length < 11) {
             return res.status(400).json({ error: 'Invalid ballot. Complete 11 squad picks.' });
         }
 
-        // Save new ballot permanently to MongoDB
         await VoteRecord.create({
             userId,
             username,
@@ -167,10 +166,8 @@ app.post('/api/vote', async (req, res) => {
             captainId
         });
 
-        // Read updated totals across all votes
         const db = await readData();
 
-        // Build Discord Webhook Message
         let squadText = '';
         for (let slot in squad) {
             const p = squad[slot];
@@ -204,6 +201,92 @@ app.post('/api/vote', async (req, res) => {
     } catch (err) {
         console.error('Failed to submit vote to MongoDB:', err);
         res.status(500).json({ error: 'An error occurred while submitting your vote.' });
+    }
+});
+
+// EDIT VOTE ROUTE
+app.put('/api/vote', async (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'You must log in with Discord first!' });
+    }
+
+    const userId = req.session.user.id;
+    const username = req.session.user.username;
+    const { squad, captainId } = req.body;
+
+    try {
+        if (!squad || Object.keys(squad).length < 11) {
+            return res.status(400).json({ error: 'Invalid ballot. Complete 11 squad picks.' });
+        }
+
+        const updatedRecord = await VoteRecord.findOneAndUpdate(
+            { userId },
+            { squad, captainId, username, updatedAt: new Date().toISOString() },
+            { new: true }
+        );
+
+        if (!updatedRecord) {
+            return res.status(404).json({ error: 'No existing vote found to update.' });
+        }
+
+        const db = await readData();
+
+        let squadText = '';
+        for (let slot in squad) {
+            const p = squad[slot];
+            const isCapt = captainId === p.id;
+            squadText += `**${slot}**: ${p.name} ${isCapt ? '⭐ *(Captain)*' : ''}\n`;
+        }
+
+        const sortedLeaderboard = Object.entries(db.playerVotes)
+            .sort((a, b) => b[1] - a[1])
+            .map(([name, count], idx) => `**#${idx + 1}** ${name} — \`${count} vote(s)\``)
+            .join('\n');
+
+        const webhookData = {
+            embeds: [{
+                title: "✏️ TS DEX TOTY BALLOT UPDATED!",
+                color: 0x00D2FF,
+                fields: [
+                    { name: "👤 User", value: `${username} (<@${userId}>)`, inline: true },
+                    { name: "🆔 Discord ID", value: `\`${userId}\``, inline: true },
+                    { name: "📋 Updated XI", value: squadText || "No data" },
+                    { name: "📊 Live Nominee Standings", value: sortedLeaderboard || "No votes yet" }
+                ],
+                footer: { text: "TS DEX TOTY 2026 Voting System" },
+                timestamp: new Date().toISOString()
+            }]
+        };
+
+        await axios.post(WEBHOOK_URL, webhookData);
+        res.json({ success: true, existingVote: updatedRecord });
+
+    } catch (err) {
+        console.error('Failed to update vote in MongoDB:', err);
+        res.status(500).json({ error: 'An error occurred while updating your vote.' });
+    }
+});
+
+// LOOKUP USER VOTE ROUTE (By Username or User ID)
+app.get('/api/vote/user/:query', async (req, res) => {
+    const query = req.params.query.trim().toLowerCase();
+    try {
+        // Search by exact userId or case-insensitive username match
+        const record = await VoteRecord.findOne({
+            $or: [
+                { userId: query },
+                { username: { $regex: new RegExp(`^${query}$`, 'i') } }
+            ]
+        });
+
+        if (!record) {
+            return res.status(404).json({ error: 'No ballot found for this username or ID.' });
+        }
+
+        res.json({ success: true, vote: record });
+    } catch (err) {
+        console.error('Error searching vote record:', err);
+        res.status(500).json({ error: 'Server error while searching ballot.' });
     }
 });
 

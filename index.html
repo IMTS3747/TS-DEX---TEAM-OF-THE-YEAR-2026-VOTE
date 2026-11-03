@@ -31,11 +31,19 @@
             <p>Cast your vote for the ultimate Team of the Year XI</p>
         </div>
 
-        <!-- USER PROFILE / DROPDOWN BAR -->
+        <!-- LOOKUP & PROFILE BAR -->
         <div class="auth-bar" id="authBar"></div>
     </header>
 
     <main class="app-container" id="appContainer">
+
+        <!-- SEARCH / LOOKUP SECTION -->
+        <section class="lookup-section">
+            <div class="lookup-box">
+                <input type="text" id="lookupInput" placeholder="Search user by Username or Discord ID..." />
+                <button class="btn btn-lookup" onclick="searchUserVote()">Lookup Ballot</button>
+            </div>
+        </section>
 
         <!-- PITCH DISPLAY -->
         <section class="pitch-section">

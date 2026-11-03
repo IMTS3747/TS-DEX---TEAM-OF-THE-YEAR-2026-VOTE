@@ -58,6 +58,8 @@ let currentUser = null;
 let hasUserVoted = false;
 let userExistingVote = null;
 let isSelectingCaptain = false;
+let isEditMode = false;
+let activeDraggedPlayerId = null;
 
 // Check Login Session On Page Load
 async function checkAuthSession() {
@@ -86,18 +88,18 @@ async function checkAuthSession() {
           <div class="dropdown-menu" id="profileDropdown">
             <div class="dropdown-header">@${currentUser.username}</div>
             <button class="dropdown-item" onclick="viewMyVote()">View My Vote</button>
+            ${hasUserVoted ? '<button class="dropdown-item" onclick="startEditVote()">Edit My Vote</button>' : ''}
             <button class="dropdown-item logout" onclick="logoutDiscord()">Log Out</button>
           </div>
         </div>
       `;
 
-            if (hasUserVoted) {
+            if (hasUserVoted && !isEditMode) {
                 const submitBtn = document.getElementById('submitBtn');
-                submitBtn.innerText = 'VOTE ALREADY SUBMITTED';
+                submitBtn.innerText = 'VOTE SUBMITTED (CLICK EDIT TO CHANGE)';
                 submitBtn.className = 'btn btn-submit disabled';
                 submitBtn.disabled = true;
 
-                // Load submitted vote into squad display if available
                 if (userExistingVote && userExistingVote.squad) {
                     squad = userExistingVote.squad;
                     captainId = userExistingVote.captainId;
@@ -143,12 +145,63 @@ function viewMyVote() {
 
     squad = userExistingVote.squad;
     captainId = userExistingVote.captainId;
+    isEditMode = false;
     updatePitch();
+    renderNominees(currentFilter);
+    updateActionButtonState();
 
     document.getElementById('modalTitle').innerText = 'YOUR SUBMITTED BALLOT';
     document.getElementById('modalDesc').innerText = 'Here is the official TOTY team you voted for:';
 
     openVisualModal();
+}
+
+function startEditVote() {
+    toggleDropdown();
+    if (!userExistingVote) return;
+
+    isEditMode = true;
+    hasUserVoted = false; // unlocks pitch edits
+    squad = JSON.parse(JSON.stringify(userExistingVote.squad));
+    captainId = userExistingVote.captainId;
+
+    updatePitch();
+    renderNominees(currentFilter);
+    updateActionButtonState();
+
+    alert("Edit mode active! Modify your squad or captain, then click 'Update Ballot'.");
+}
+
+// USER LOOKUP FUNCTIONALITY
+async function searchUserVote() {
+    const query = document.getElementById('lookupInput').value.trim();
+    if (!query) {
+        alert("Please enter a username or Discord ID to search.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/vote/user/${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || "User ballot not found.");
+            return;
+        }
+
+        const foundVote = data.vote;
+        squad = foundVote.squad;
+        captainId = foundVote.captainId;
+        updatePitch();
+
+        document.getElementById('modalTitle').innerText = `${foundVote.username.toUpperCase()}'S TOTY BALLOT`;
+        document.getElementById('modalDesc').innerText = `Viewing official submitted ballot for Discord ID: ${foundVote.userId}`;
+        openVisualModal();
+
+    } catch (err) {
+        console.error(err);
+        alert("An error occurred while looking up the user vote.");
+    }
 }
 
 // Render Nominees based on active filter state
@@ -171,7 +224,7 @@ function renderNominees(filter = currentFilter) {
         const isSelected = Object.values(squad).some(p => p && p.id === player.id);
         const card = document.createElement('div');
         card.className = `nominee-card ${isSelected ? 'selected' : ''}`;
-        card.draggable = !hasUserVoted && !isSelected;
+        card.draggable = (hasUserVoted && !isEditMode) ? false : !isSelected;
 
         card.innerHTML = `
       <div class="nominee-info">
@@ -181,10 +234,37 @@ function renderNominees(filter = currentFilter) {
       <img src="${player.render}" class="nominee-render" alt="${player.name}" onerror="this.style.display='none'" />
     `;
 
-        if (!isSelected && !hasUserVoted) {
+        if (!isSelected && (!(hasUserVoted && !isEditMode))) {
+            // Desktop Drag Events
             card.addEventListener('dragstart', (e) => {
+                activeDraggedPlayerId = player.id;
                 e.dataTransfer.setData('text/plain', player.id);
             });
+
+            // Mobile Touch Drag Events (Fully fixes mobile dragging & drop issues)
+            card.addEventListener('touchstart', (e) => {
+                activeDraggedPlayerId = player.id;
+            }, { passive: true });
+
+            card.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // stops page scrolling while dragging card
+            }, { passive: false });
+
+            card.addEventListener('touchend', (e) => {
+                const touch = e.changedTouches[0];
+                const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                const slot = targetElement ? targetElement.closest('.slot') : null;
+
+                if (slot) {
+                    const slotPos = slot.getAttribute('data-pos');
+                    const slotKey = slot.getAttribute('data-slot');
+                    if (player.pos === slotPos) {
+                        placePlayer(player, slotKey);
+                    }
+                }
+                activeDraggedPlayerId = null;
+            });
+
             card.addEventListener('click', () => autoPlaceNominee(player));
         }
 
@@ -202,7 +282,7 @@ document.querySelectorAll('.slot').forEach(slot => {
     const slotPos = slot.getAttribute('data-pos');
 
     slot.addEventListener('dragover', (e) => {
-        if (hasUserVoted || isSelectingCaptain) return;
+        if ((hasUserVoted && !isEditMode) || isSelectingCaptain) return;
         e.preventDefault();
         slot.classList.add('drag-hover');
     });
@@ -212,11 +292,11 @@ document.querySelectorAll('.slot').forEach(slot => {
     });
 
     slot.addEventListener('drop', (e) => {
-        if (hasUserVoted || isSelectingCaptain) return;
+        if ((hasUserVoted && !isEditMode) || isSelectingCaptain) return;
         e.preventDefault();
         slot.classList.remove('drag-hover', 'drag-invalid');
 
-        const playerId = parseInt(e.dataTransfer.getData('text/plain'));
+        const playerId = parseInt(e.dataTransfer.getData('text/plain') || activeDraggedPlayerId);
         const player = nominees.find(n => n.id === playerId);
         const slotKey = slot.getAttribute('data-slot');
 
@@ -231,7 +311,7 @@ document.querySelectorAll('.slot').forEach(slot => {
     });
 
     slot.addEventListener('click', () => {
-        if (hasUserVoted) return;
+        if (hasUserVoted && !isEditMode) return;
         const slotKey = slot.getAttribute('data-slot');
         const playerInSlot = squad[slotKey];
 
@@ -255,7 +335,7 @@ document.querySelectorAll('.slot').forEach(slot => {
 });
 
 function autoPlaceNominee(player) {
-    if (hasUserVoted || isSelectingCaptain) return;
+    if (hasUserVoted && !isEditMode) return;
     const slots = Array.from(document.querySelectorAll('.slot'));
     const openSlot = slots.find(s => s.getAttribute('data-pos') === player.pos && !squad[s.getAttribute('data-slot')]);
 
@@ -308,12 +388,12 @@ function updatePitch() {
 
 // Dynamic Action Button State Handler
 function updateActionButtonState() {
-    if (hasUserVoted) return;
+    if (hasUserVoted && !isEditMode) return;
     const submitBtn = document.getElementById('submitBtn');
     const filledCount = Object.keys(squad).length;
 
     if (filledCount < 11) {
-        submitBtn.innerText = `SUBMIT BALLOT (${filledCount}/11)`;
+        submitBtn.innerText = isEditMode ? `UPDATE BALLOT (${filledCount}/11)` : `SUBMIT BALLOT (${filledCount}/11)`;
         submitBtn.className = 'btn btn-submit disabled';
         submitBtn.disabled = true;
         isSelectingCaptain = false;
@@ -328,7 +408,7 @@ function updateActionButtonState() {
             submitBtn.disabled = false;
         }
     } else {
-        submitBtn.innerText = 'SUBMIT BALLOT';
+        submitBtn.innerText = isEditMode ? 'UPDATE BALLOT' : 'SUBMIT BALLOT';
         submitBtn.className = 'btn btn-submit active';
         submitBtn.disabled = false;
     }
@@ -336,7 +416,7 @@ function updateActionButtonState() {
 
 // Main Action Button Click Handler
 function handleActionButtonClick() {
-    if (hasUserVoted) return;
+    if (hasUserVoted && !isEditMode) return;
     const filledCount = Object.keys(squad).length;
 
     if (filledCount < 11) return;
@@ -354,11 +434,15 @@ function handleActionButtonClick() {
         return;
     }
 
-    submitVote();
+    if (isEditMode) {
+        updateVote();
+    } else {
+        submitVote();
+    }
 }
 
 function resetSquad() {
-    if (hasUserVoted) return;
+    if (hasUserVoted && !isEditMode) return;
     squad = {};
     captainId = null;
     isSelectingCaptain = false;
@@ -382,7 +466,6 @@ function openVisualModal() {
 
     modal.style.display = 'flex';
 
-    // Populate the clean cutout export frame rows
     const rows = {
         ATT: ['LW', 'ST', 'RW'],
         MID: ['LCM', 'CM/CDM/CAM', 'RCM'],
@@ -395,7 +478,6 @@ function openVisualModal() {
     document.getElementById('expRowDef').innerHTML = rows.DEF.map(slot => createExportCardHTML(slot)).join('');
     document.getElementById('expRowGk').innerHTML = rows.GK.map(slot => createExportCardHTML(slot)).join('');
 
-    // Capture the clean export frame via html2canvas
     setTimeout(() => {
         html2canvas(exportPitch, {
             useCORS: true,
@@ -449,8 +531,6 @@ async function submitVote() {
         return;
     }
 
-    if (hasUserVoted) return;
-
     const count = Object.keys(squad).length;
     if (count < 11 || !captainId) {
         alert("Please complete your team and select a captain!");
@@ -472,16 +552,52 @@ async function submitVote() {
         }
 
         userExistingVote = { squad, captainId };
-
-        document.getElementById('modalTitle').innerText = 'VOTE REGISTERED';
-        document.getElementById('modalDesc').innerText = 'Your official TS DEX TOTY XI selection has been submitted and posted to Discord!';
-
         hasUserVoted = true;
+        isEditMode = false;
         checkAuthSession();
         openVisualModal();
     } catch (err) {
         console.error(err);
         alert("An error occurred while submitting your vote.");
+    }
+}
+
+// UPDATE VOTE TO SERVER
+async function updateVote() {
+    if (!currentUser) return;
+
+    const count = Object.keys(squad).length;
+    if (count < 11 || !captainId) {
+        alert("Please complete your team and select a captain!");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/vote', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ squad, captainId })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || "Failed to update vote.");
+            return;
+        }
+
+        userExistingVote = data.existingVote;
+        hasUserVoted = true;
+        isEditMode = false;
+
+        document.getElementById('modalTitle').innerText = 'BALLOT UPDATED';
+        document.getElementById('modalDesc').innerText = 'Your official TS DEX TOTY XI selection has been successfully updated and posted to Discord!';
+
+        checkAuthSession();
+        openVisualModal();
+    } catch (err) {
+        console.error(err);
+        alert("An error occurred while updating your vote.");
     }
 }
 

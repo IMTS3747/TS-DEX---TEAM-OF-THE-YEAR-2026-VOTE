@@ -905,3 +905,61 @@ body {
         bottom: 8px;
     }
 }
+
+/* LOOKUP SEARCH BAR */
+.lookup-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: -5px;
+}
+
+.lookup-box {
+    display: flex;
+    gap: 10px;
+    background: var(--panel-bg);
+    border: 1px solid rgba(0, 210, 255, 0.3);
+    padding: 8px 14px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.lookup-box input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.lookup-box input:focus {
+    border-color: var(--accent-blue);
+}
+
+.btn-lookup {
+    background: var(--accent-blue);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 800;
+    font-size: 0.75rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+
+.btn-lookup:hover {
+    background: #00b0ff;
+    transform: translateY(-1px);
+}
+
+/* MOBILE TOUCH & DRAG FIXES */
+.nominee-card {
+    touch-action: none;
+    /* Prevents mobile page scrolling when attempting to drag cards */
+}
