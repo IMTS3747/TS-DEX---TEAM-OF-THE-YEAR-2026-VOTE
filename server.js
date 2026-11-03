@@ -7,41 +7,36 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CONFIGURATION & ENVIRONMENT VARIABLES
 const CLIENT_ID = process.env.CLIENT_ID || '1566859679441752184';
 const CLIENT_SECRET = process.env.CLIENT_SECRET || 'c7UlC3fZcG3C1Z0lZcpaoFySe934CzH8';
 const REDIRECT_URI = process.env.REDIRECT_URI || 'https://ts-dex-team-of-the-year-2027-vote.onrender.com/api/auth/callback';
 const WEBHOOK_URL = process.env.WEBHOOK_URL || 'https://discord.com/api/webhooks/1566859350381953099/hzapHaaXFpXqYaAuHSqjieC1KLOmjHr3qgg3nb3jUVk5FbK6F4iP-DMwp0IFTerMKQdY';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://imts49504_db_user:ChhZN3qtu7lPhfIp@cluster0.hxdv95b.mongodb.net/';
 
-// MIDDLEWARE
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'ts_dex_toty_secret_key_2027',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 Days
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
 }));
 
-// MONGODB DATABASE SETUP
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Successfully connected to MongoDB Atlas!'))
     .catch(err => console.error('MongoDB Atlas connection error:', err));
 
-// Mongoose Schema & Model for Votes (Fully backward-compatible with existing records)
 const voteSchema = new mongoose.Schema({
     userId: { type: String, required: true, unique: true },
     username: { type: String, required: true },
     squad: { type: Object, required: true },
     captainId: { type: Number, required: true },
     timestamp: { type: String, default: () => new Date().toISOString() },
-    updatedAt: { type: String }
+    updateCount: { type: Number, default: 1 }
 });
 
 const VoteRecord = mongoose.model('VoteRecord', voteSchema);
 
-// Helper function to aggregate votes dynamically from MongoDB
 async function readData() {
     try {
         const votes = await VoteRecord.find({});
@@ -54,7 +49,7 @@ async function readData() {
                 squad: record.squad,
                 captainId: record.captainId,
                 timestamp: record.timestamp,
-                updatedAt: record.updatedAt
+                updateCount: record.updateCount || 1
             };
 
             if (record.squad) {
@@ -74,7 +69,6 @@ async function readData() {
     }
 }
 
-// DISCORD OAUTH2 ROUTES
 app.get('/api/auth/login', (req, res) => {
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
     res.redirect(authUrl);
@@ -112,7 +106,6 @@ app.get('/api/auth/callback', async (req, res) => {
     }
 });
 
-// GET CURRENT USER & BALLOT SESSION STATUS
 app.get('/api/user', async (req, res) => {
     if (req.session && req.session.user) {
         try {
@@ -139,7 +132,6 @@ app.get('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// SUBMIT VOTE ROUTE
 app.post('/api/vote', async (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ error: 'You must log in with Discord first!' });
@@ -152,20 +144,14 @@ app.post('/api/vote', async (req, res) => {
     try {
         const existingVote = await VoteRecord.findOne({ userId });
         if (existingVote) {
-            return res.status(400).json({ error: 'You have already voted! Use the Edit feature to update your ballot.' });
+            return res.status(400).json({ error: 'You have already voted! Use Edit Ballot to modify your selection.' });
         }
 
         if (!squad || Object.keys(squad).length < 11) {
             return res.status(400).json({ error: 'Invalid ballot. Complete 11 squad picks.' });
         }
 
-        await VoteRecord.create({
-            userId,
-            username,
-            squad,
-            captainId
-        });
-
+        await VoteRecord.create({ userId, username, squad, captainId, updateCount: 1 });
         const db = await readData();
 
         let squadText = '';
@@ -190,7 +176,7 @@ app.post('/api/vote', async (req, res) => {
                     { name: "📋 Submitted XI", value: squadText || "No data" },
                     { name: "📊 Live Nominee Standings", value: sortedLeaderboard || "No votes yet" }
                 ],
-                footer: { text: "TS DEX TOTY 2026 Voting System" },
+                footer: { text: "TS DEX TOTY 2026 Voting System • v1" },
                 timestamp: new Date().toISOString()
             }]
         };
@@ -204,7 +190,6 @@ app.post('/api/vote', async (req, res) => {
     }
 });
 
-// EDIT VOTE ROUTE
 app.put('/api/vote', async (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ error: 'You must log in with Discord first!' });
@@ -219,15 +204,14 @@ app.put('/api/vote', async (req, res) => {
             return res.status(400).json({ error: 'Invalid ballot. Complete 11 squad picks.' });
         }
 
+        const currentRecord = await VoteRecord.findOne({ userId });
+        const nextUpdateCount = currentRecord ? (currentRecord.updateCount || 1) + 1 : 2;
+
         const updatedRecord = await VoteRecord.findOneAndUpdate(
             { userId },
-            { squad, captainId, username, updatedAt: new Date().toISOString() },
+            { squad, captainId, username, updateCount: nextUpdateCount },
             { new: true }
         );
-
-        if (!updatedRecord) {
-            return res.status(404).json({ error: 'No existing vote found to update.' });
-        }
 
         const db = await readData();
 
@@ -245,7 +229,7 @@ app.put('/api/vote', async (req, res) => {
 
         const webhookData = {
             embeds: [{
-                title: "✏️ TS DEX TOTY BALLOT UPDATED!",
+                title: `✏️ TS DEX TOTY BALLOT UPDATED [v${nextUpdateCount}]`,
                 color: 0x00D2FF,
                 fields: [
                     { name: "👤 User", value: `${username} (<@${userId}>)`, inline: true },
@@ -253,7 +237,7 @@ app.put('/api/vote', async (req, res) => {
                     { name: "📋 Updated XI", value: squadText || "No data" },
                     { name: "📊 Live Nominee Standings", value: sortedLeaderboard || "No votes yet" }
                 ],
-                footer: { text: "TS DEX TOTY 2026 Voting System" },
+                footer: { text: `TS DEX TOTY 2026 Voting System • Update #${nextUpdateCount}` },
                 timestamp: new Date().toISOString()
             }]
         };
@@ -267,11 +251,9 @@ app.put('/api/vote', async (req, res) => {
     }
 });
 
-// LOOKUP USER VOTE ROUTE (By Username or User ID)
 app.get('/api/vote/user/:query', async (req, res) => {
     const query = req.params.query.trim().toLowerCase();
     try {
-        // Search by exact userId or case-insensitive username match
         const record = await VoteRecord.findOne({
             $or: [
                 { userId: query },
@@ -287,6 +269,27 @@ app.get('/api/vote/user/:query', async (req, res) => {
     } catch (err) {
         console.error('Error searching vote record:', err);
         res.status(500).json({ error: 'Server error while searching ballot.' });
+    }
+});
+
+// ADMIN ROUTES
+app.post('/api/admin/reset-all', async (req, res) => {
+    try {
+        await VoteRecord.deleteMany({});
+        res.json({ success: true, message: 'All votes successfully wiped.' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to reset all votes.' });
+    }
+});
+
+app.delete('/api/admin/reset-user/:userId', async (req, res) => {
+    try {
+        const targetId = req.params.userId;
+        const result = await VoteRecord.findOneAndDelete({ userId: targetId });
+        if (!result) return res.status(404).json({ error: 'User vote record not found.' });
+        res.json({ success: true, message: `Vote for user ${targetId} deleted.` });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete user vote.' });
     }
 });
 

@@ -963,3 +963,68 @@ body {
     touch-action: none;
     /* Prevents mobile page scrolling when attempting to drag cards */
 }
+
+.main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 25px;
+}
+
+.header-lookup-area {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.header-lookup-area input {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 210, 255, 0.3);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #fff;
+    font-size: 0.8rem;
+    width: 180px;
+    outline: none;
+}
+
+.header-lookup-area input:focus {
+    border-color: var(--accent-blue);
+}
+
+.btn-lookup {
+    background: var(--accent-blue);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 800;
+    font-size: 0.7rem;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.logo-area {
+    text-align: center;
+    flex: 1;
+}
+
+.auth-bar {
+    position: static !important;
+}
+
+@media screen and (max-width: 850px) {
+    .main-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .header-lookup-area {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .header-lookup-area input {
+        width: 60%;
+    }
+}

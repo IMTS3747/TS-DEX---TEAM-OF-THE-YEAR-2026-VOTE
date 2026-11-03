@@ -10,7 +10,6 @@
 
 <body>
 
-    <!-- MANDATORY LOGIN GATE OVERLAY -->
     <div class="login-gate-overlay" id="loginGate">
         <div class="login-gate-box">
             <h1>TS DEX TOTY 2027</h1>
@@ -26,39 +25,33 @@
     </div>
 
     <header class="main-header">
+        <!-- HEADER SEARCH BAR (LEFT OF TITLE) -->
+        <div class="header-lookup-area">
+            <input type="text" id="lookupInput" placeholder="Search user..." oninput="checkAdminSecret(this)" />
+            <button class="btn btn-lookup" onclick="searchUserVote()">Lookup</button>
+        </div>
+
         <div class="logo-area">
             <h1>TS DEX TOTY 2027</h1>
             <p>Cast your vote for the ultimate Team of the Year XI</p>
         </div>
 
-        <!-- LOOKUP & PROFILE BAR -->
         <div class="auth-bar" id="authBar"></div>
     </header>
 
     <main class="app-container" id="appContainer">
 
-        <!-- SEARCH / LOOKUP SECTION -->
-        <section class="lookup-section">
-            <div class="lookup-box">
-                <input type="text" id="lookupInput" placeholder="Search user by Username or Discord ID..." />
-                <button class="btn btn-lookup" onclick="searchUserVote()">Lookup Ballot</button>
-            </div>
-        </section>
-
-        <!-- PITCH DISPLAY -->
         <section class="pitch-section">
             <div class="pitch-frame" id="pitchFrame">
                 <div class="pitch" id="pitch">
                     <div class="pitch-overlay"></div>
 
-                    <!-- Attackers (3) -->
                     <div class="pitch-row row-att">
                         <div class="slot" data-pos="ATT" data-slot="LW"><span class="slot-label">LW</span></div>
                         <div class="slot" data-pos="ATT" data-slot="ST"><span class="slot-label">ST</span></div>
                         <div class="slot" data-pos="ATT" data-slot="RW"><span class="slot-label">RW</span></div>
                     </div>
 
-                    <!-- Midfielders (3) -->
                     <div class="pitch-row row-mid">
                         <div class="slot" data-pos="MID" data-slot="LCM"><span class="slot-label">CM</span></div>
                         <div class="slot" data-pos="MID" data-slot="CM/CDM/CAM"><span
@@ -66,7 +59,6 @@
                         <div class="slot" data-pos="MID" data-slot="RCM"><span class="slot-label">CM</span></div>
                     </div>
 
-                    <!-- Defenders (4) -->
                     <div class="pitch-row row-def">
                         <div class="slot" data-pos="DEF" data-slot="LB"><span class="slot-label">LB</span></div>
                         <div class="slot" data-pos="DEF" data-slot="LCB"><span class="slot-label">CB</span></div>
@@ -74,12 +66,10 @@
                         <div class="slot" data-pos="DEF" data-slot="RB"><span class="slot-label">RB</span></div>
                     </div>
 
-                    <!-- Goalkeeper (1) -->
                     <div class="pitch-row row-gk">
                         <div class="slot" data-pos="GK" data-slot="GK"><span class="slot-label">GK</span></div>
                     </div>
 
-                    <!-- WATERMARK LOGO -->
                     <img src="assets/web/toty - TS Dex logo.png" class="pitch-watermark" alt="TS DEX Watermark" />
 
                 </div>
@@ -102,7 +92,6 @@
             </div>
         </section>
 
-        <!-- HORIZONTAL 2-LEVEL NOMINEE TRAY -->
         <section class="nominees-section">
             <div class="nominees-header">
                 <h3>NOMINEES DECK</h3>
@@ -117,7 +106,6 @@
             <div class="nominees-container" id="nomineesList"></div>
         </section>
 
-        <!-- VOTING CRITERIA SECTION -->
         <section class="criteria-section">
             <h3>VOTING CRITERIA</h3>
             <p class="criteria-subtitle">Please base your TOTY selections on the following criteria (ordered by
@@ -133,13 +121,31 @@
 
     </main>
 
-    <!-- EA-STYLE VISUAL SUBMISSION MODAL -->
+    <!-- HIDDEN ADMIN PANEL MODAL -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-content">
+            <h2 style="color: #ff4757;">🛠️ ADMIN CONTROL PANEL</h2>
+            <p style="color:var(--text-sub); font-size:0.85rem; margin: 12px 0;">Secret unlock key recognized. Manage
+                database votes below:</p>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+                <button class="btn" style="background:#ff4757; color:#fff;" onclick="adminResetAll()">⚠️ Wipe All
+                    Votes</button>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="adminTargetUid" placeholder="Enter User ID (UID)"
+                        style="flex:1; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:8px; color:#fff;" />
+                    <button class="btn" style="background:var(--accent-blue); color:#000;"
+                        onclick="adminResetUser()">Reset User</button>
+                </div>
+                <button class="btn btn-reset" onclick="closeAdminModal()">Close Panel</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modal">
         <div class="modal-content large-modal">
             <h2 id="modalTitle">VOTE REGISTERED</h2>
             <p id="modalDesc">Your official TS DEX TOTY XI selection has been saved and posted to Discord!</p>
 
-            <!-- IMAGE PREVIEW CONTAINER -->
             <div class="image-preview-wrapper" id="imagePreviewWrapper">
                 <div class="loading-spinner" id="modalSpinner">Generating your TOTY Card graphic...</div>
                 <img id="totyCanvasImage" class="toty-preview-img" alt="TS DEX TOTY XI" />
@@ -154,7 +160,6 @@
         </div>
     </div>
 
-    <!-- HTML2CANVAS LIBRARY FOR SCREENSHOT GENERATION -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js"></script>
 </body>

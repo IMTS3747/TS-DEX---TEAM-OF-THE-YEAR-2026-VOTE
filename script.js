@@ -1,6 +1,4 @@
-// TS DEX Complete TOTY Nominees List
 const nominees = [
-    // ATTACKERS
     { id: 1, name: "Kylian Mbappé", pos: "ATT", render: "assets/renders/mbappe.png" },
     { id: 2, name: "Lamine Yamal", pos: "ATT", render: "assets/renders/yamal.png" },
     { id: 3, name: "Harry Kane", pos: "ATT", render: "assets/renders/kane.png" },
@@ -11,8 +9,6 @@ const nominees = [
     { id: 8, name: "Erling Haaland", pos: "ATT", render: "assets/renders/haaland.png" },
     { id: 9, name: "Lionel Messi", pos: "ATT", render: "assets/renders/messi.png" },
     { id: 10, name: "Bukayo Saka", pos: "ATT", render: "assets/renders/saka.png" },
-
-    // MIDFIELDERS
     { id: 11, name: "Rodrigo Hernández", pos: "MID", render: "assets/renders/rodri.png" },
     { id: 12, name: "Fabián Ruiz", pos: "MID", render: "assets/renders/ruiz.png" },
     { id: 13, name: "Vitinha", pos: "MID", render: "assets/renders/vitinha.png" },
@@ -23,8 +19,6 @@ const nominees = [
     { id: 18, name: "João Neves", pos: "MID", render: "assets/renders/neves.png" },
     { id: 19, name: "Nico Paz", pos: "MID", render: "assets/renders/paz.png" },
     { id: 20, name: "Fermín López", pos: "MID", render: "assets/renders/lopez.png" },
-
-    // DEFENDERS
     { id: 21, name: "Pau Cubarsí", pos: "DEF", render: "assets/renders/cubarsi.png" },
     { id: 22, name: "William Saliba", pos: "DEF", render: "assets/renders/saliba.png" },
     { id: 23, name: "Willian Pacho", pos: "DEF", render: "assets/renders/pacho.png" },
@@ -40,8 +34,6 @@ const nominees = [
     { id: 33, name: "Cristian Romero", pos: "DEF", render: "assets/renders/romero.png" },
     { id: 34, name: "Dean Huijsen", pos: "DEF", render: "assets/renders/huijsen.png" },
     { id: 35, name: "Lucas Hernández", pos: "DEF", render: "assets/renders/lucas_hernandez.png" },
-
-    // GOALKEEPERS
     { id: 36, name: "Vozinha", pos: "GK", render: "assets/renders/vozinha.png" },
     { id: 37, name: "Unai Simón", pos: "GK", render: "assets/renders/simon.png" },
     { id: 38, name: "David Raya", pos: "GK", render: "assets/renders/raya.png" },
@@ -61,7 +53,6 @@ let isSelectingCaptain = false;
 let isEditMode = false;
 let activeDraggedPlayerId = null;
 
-// Check Login Session On Page Load
 async function checkAuthSession() {
     try {
         const res = await fetch('/api/user');
@@ -88,24 +79,20 @@ async function checkAuthSession() {
           <div class="dropdown-menu" id="profileDropdown">
             <div class="dropdown-header">@${currentUser.username}</div>
             <button class="dropdown-item" onclick="viewMyVote()">View My Vote</button>
-            ${hasUserVoted ? '<button class="dropdown-item" onclick="startEditVote()">Edit My Vote</button>' : ''}
             <button class="dropdown-item logout" onclick="logoutDiscord()">Log Out</button>
           </div>
         </div>
       `;
 
             if (hasUserVoted && !isEditMode) {
-                const submitBtn = document.getElementById('submitBtn');
-                submitBtn.innerText = 'VOTE SUBMITTED (CLICK EDIT TO CHANGE)';
-                submitBtn.className = 'btn btn-submit disabled';
-                submitBtn.disabled = true;
-
                 if (userExistingVote && userExistingVote.squad) {
                     squad = userExistingVote.squad;
                     captainId = userExistingVote.captainId;
                     updatePitch();
                 }
             }
+            updateActionButtonState();
+            renderNominees(currentFilter);
         } else {
             loginGate.style.display = 'flex';
             authBar.innerHTML = '';
@@ -152,33 +139,24 @@ function viewMyVote() {
 
     document.getElementById('modalTitle').innerText = 'YOUR SUBMITTED BALLOT';
     document.getElementById('modalDesc').innerText = 'Here is the official TOTY team you voted for:';
-
     openVisualModal();
 }
 
 function startEditVote() {
-    toggleDropdown();
     if (!userExistingVote) return;
-
     isEditMode = true;
-    hasUserVoted = false; // unlocks pitch edits
+    hasUserVoted = false;
     squad = JSON.parse(JSON.stringify(userExistingVote.squad));
     captainId = userExistingVote.captainId;
 
     updatePitch();
     renderNominees(currentFilter);
     updateActionButtonState();
-
-    alert("Edit mode active! Modify your squad or captain, then click 'Update Ballot'.");
 }
 
-// USER LOOKUP FUNCTIONALITY
 async function searchUserVote() {
     const query = document.getElementById('lookupInput').value.trim();
-    if (!query) {
-        alert("Please enter a username or Discord ID to search.");
-        return;
-    }
+    if (!query) return;
 
     try {
         const res = await fetch(`/api/vote/user/${encodeURIComponent(query)}`);
@@ -193,18 +171,57 @@ async function searchUserVote() {
         squad = foundVote.squad;
         captainId = foundVote.captainId;
         updatePitch();
+        renderNominees(currentFilter);
 
         document.getElementById('modalTitle').innerText = `${foundVote.username.toUpperCase()}'S TOTY BALLOT`;
         document.getElementById('modalDesc').innerText = `Viewing official submitted ballot for Discord ID: ${foundVote.userId}`;
         openVisualModal();
-
     } catch (err) {
         console.error(err);
         alert("An error occurred while looking up the user vote.");
     }
 }
 
-// Render Nominees based on active filter state
+// ADMIN SECRET TRIGGER
+function checkAdminSecret(input) {
+    if (input.value === "Q3afIc00WcoKOigJeBzxjaHhg2rVjtxN") {
+        input.value = "";
+        document.getElementById('adminModal').style.display = 'flex';
+    }
+}
+
+function closeAdminModal() {
+    document.getElementById('adminModal').style.display = 'none';
+}
+
+async function adminResetAll() {
+    if (!confirm("Are you sure you want to delete ALL votes from the database?")) return;
+    try {
+        const res = await fetch('/api/admin/reset-all', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || "Reset complete.");
+        window.location.reload();
+    } catch (err) {
+        alert("Failed to reset votes.");
+    }
+}
+
+async function adminResetUser() {
+    const uid = document.getElementById('adminTargetUid').value.trim();
+    if (!uid) {
+        alert("Enter a target User ID.");
+        return;
+    }
+    try {
+        const res = await fetch(`/api/admin/reset-user/${uid}`, { method: 'DELETE' });
+        const data = await res.json();
+        alert(data.message || data.error);
+        window.location.reload();
+    } catch (err) {
+        alert("Failed to reset user vote.");
+    }
+}
+
 function renderNominees(filter = currentFilter) {
     currentFilter = filter;
     const container = document.getElementById('nomineesList');
@@ -235,19 +252,17 @@ function renderNominees(filter = currentFilter) {
     `;
 
         if (!isSelected && (!(hasUserVoted && !isEditMode))) {
-            // Desktop Drag Events
             card.addEventListener('dragstart', (e) => {
                 activeDraggedPlayerId = player.id;
                 e.dataTransfer.setData('text/plain', player.id);
             });
 
-            // Mobile Touch Drag Events (Fully fixes mobile dragging & drop issues)
-            card.addEventListener('touchstart', (e) => {
+            card.addEventListener('touchstart', () => {
                 activeDraggedPlayerId = player.id;
             }, { passive: true });
 
             card.addEventListener('touchmove', (e) => {
-                e.preventDefault(); // stops page scrolling while dragging card
+                e.preventDefault();
             }, { passive: false });
 
             card.addEventListener('touchend', (e) => {
@@ -277,7 +292,6 @@ function filterNominees(pos, event) {
     renderNominees(pos);
 }
 
-// Pitch Slot Logic
 document.querySelectorAll('.slot').forEach(slot => {
     const slotPos = slot.getAttribute('data-pos');
 
@@ -386,11 +400,16 @@ function updatePitch() {
     });
 }
 
-// Dynamic Action Button State Handler
 function updateActionButtonState() {
-    if (hasUserVoted && !isEditMode) return;
     const submitBtn = document.getElementById('submitBtn');
     const filledCount = Object.keys(squad).length;
+
+    if (hasUserVoted && !isEditMode) {
+        submitBtn.innerText = 'EDIT BALLOT';
+        submitBtn.className = 'btn btn-submit';
+        submitBtn.disabled = false;
+        return;
+    }
 
     if (filledCount < 11) {
         submitBtn.innerText = isEditMode ? `UPDATE BALLOT (${filledCount}/11)` : `SUBMIT BALLOT (${filledCount}/11)`;
@@ -414,11 +433,13 @@ function updateActionButtonState() {
     }
 }
 
-// Main Action Button Click Handler
 function handleActionButtonClick() {
-    if (hasUserVoted && !isEditMode) return;
-    const filledCount = Object.keys(squad).length;
+    if (hasUserVoted && !isEditMode) {
+        startEditVote();
+        return;
+    }
 
+    const filledCount = Object.keys(squad).length;
     if (filledCount < 11) return;
 
     if (!captainId) {
@@ -451,7 +472,6 @@ function resetSquad() {
     updateActionButtonState();
 }
 
-// GENERATE EA-STYLE IMAGE SNAPSHOT & OPEN MODAL
 function openVisualModal() {
     const modal = document.getElementById('modal');
     const spinner = document.getElementById('modalSpinner');
@@ -463,7 +483,6 @@ function openVisualModal() {
     previewImg.style.display = 'none';
     downloadBtn.style.pointerEvents = 'none';
     downloadBtn.style.opacity = '0.5';
-
     modal.style.display = 'flex';
 
     const rows = {
@@ -523,7 +542,6 @@ function createExportCardHTML(slotKey) {
     `;
 }
 
-// SUBMIT VOTE TO SERVER
 async function submitVote() {
     if (!currentUser) {
         alert("Please login with your Discord account first to cast your vote!");
@@ -545,7 +563,6 @@ async function submitVote() {
         });
 
         const data = await res.json();
-
         if (!res.ok) {
             alert(data.error || "Failed to submit vote.");
             return;
@@ -562,7 +579,6 @@ async function submitVote() {
     }
 }
 
-// UPDATE VOTE TO SERVER
 async function updateVote() {
     if (!currentUser) return;
 
@@ -580,7 +596,6 @@ async function updateVote() {
         });
 
         const data = await res.json();
-
         if (!res.ok) {
             alert(data.error || "Failed to update vote.");
             return;
@@ -605,7 +620,4 @@ function closeModal() {
     document.getElementById('modal').style.display = 'none';
 }
 
-// Initial Loads
 checkAuthSession();
-renderNominees('ATT');
-updateActionButtonState();
