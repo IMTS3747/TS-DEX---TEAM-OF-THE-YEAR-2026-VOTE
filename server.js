@@ -293,4 +293,72 @@ app.delete('/api/admin/reset-user/:userId', async (req, res) => {
     }
 });
 
+app.get('/api/admin/most-voted-xi', async (req, res) => {
+    try {
+        const votes = await VoteRecord.find({});
+        const playerMap = {};
+
+        votes.forEach(record => {
+            if (record.squad) {
+                for (let slot in record.squad) {
+                    const p = record.squad[slot];
+                    if (p && p.id) {
+                        if (!playerMap[p.id]) {
+                            playerMap[p.id] = { player: p, count: 0 };
+                        }
+                        playerMap[p.id].count += 1;
+                    }
+                }
+            }
+        });
+
+        const playersList = Object.values(playerMap);
+
+        const att = playersList.filter(p => p.player.pos === 'ATT').sort((a, b) => b.count - a.count);
+        const mid = playersList.filter(p => p.player.pos === 'MID').sort((a, b) => b.count - a.count);
+        const def = playersList.filter(p => p.player.pos === 'DEF').sort((a, b) => b.count - a.count);
+        const gk = playersList.filter(p => p.player.pos === 'GK').sort((a, b) => b.count - a.count);
+
+        const squad = {};
+        let allSelected = [];
+
+        const attSlots = ['LW', 'ST', 'RW'];
+        att.slice(0, 3).forEach((item, idx) => {
+            if (attSlots[idx]) {
+                squad[attSlots[idx]] = item.player;
+                allSelected.push(item);
+            }
+        });
+
+        const midSlots = ['LCM', 'CM/CDM/CAM', 'RCM'];
+        mid.slice(0, 3).forEach((item, idx) => {
+            if (midSlots[idx]) {
+                squad[midSlots[idx]] = item.player;
+                allSelected.push(item);
+            }
+        });
+
+        const defSlots = ['LB', 'LCB', 'RCB', 'RB'];
+        def.slice(0, 4).forEach((item, idx) => {
+            if (defSlots[idx]) {
+                squad[defSlots[idx]] = item.player;
+                allSelected.push(item);
+            }
+        });
+
+        if (gk.length > 0) {
+            squad['GK'] = gk[0].player;
+            allSelected.push(gk[0]);
+        }
+
+        allSelected.sort((a, b) => b.count - a.count);
+        const captainId = allSelected.length > 0 ? allSelected[0].player.id : null;
+
+        res.json({ success: true, squad, captainId });
+    } catch (err) {
+        console.error('Error generating most voted XI:', err);
+        res.status(500).json({ error: 'Failed to generate most voted XI.' });
+    }
+});
+
 app.listen(PORT, () => console.log(`TS DEX TOTY Server running on http://localhost:${PORT}`));

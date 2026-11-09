@@ -616,6 +616,31 @@ async function updateVote() {
     }
 }
 
+async function adminViewMostVotedXI() {
+    try {
+        const res = await fetch('/api/admin/most-voted-xi');
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || "Failed to fetch most voted XI.");
+            return;
+        }
+
+        squad = data.squad;
+        captainId = data.captainId;
+        updatePitch();
+        renderNominees(currentFilter);
+        closeAdminModal();
+
+        document.getElementById('modalTitle').innerText = 'CURRENT MOST VOTED XI';
+        document.getElementById('modalDesc').innerText = 'This is the aggregate Team of the Year XI based on current database votes.';
+        openVisualModal();
+    } catch (err) {
+        console.error(err);
+        alert("An error occurred while fetching the most voted XI.");
+    }
+}
+
 function closeModal() {
     document.getElementById('modal').style.display = 'none';
 }
